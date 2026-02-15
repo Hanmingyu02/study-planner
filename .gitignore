@@ -1,0 +1,12 @@
+.DS_Store
+
+front/node_modules
+front/dist
+front/tsconfig.tsbuildinfo
+front/.vite
+
+backend/.gradle
+backend/build
+backend/.idea
+
+server
