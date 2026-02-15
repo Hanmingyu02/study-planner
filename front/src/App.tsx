@@ -174,6 +174,7 @@ export default function App() {
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
 
   const [token, setToken] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -536,6 +537,8 @@ export default function App() {
   });
 
   const handleAuth = async () => {
+    if (authLoading) return;
+
     const email = authEmail.trim().toLowerCase();
     const password = authPassword.trim();
 
@@ -544,6 +547,7 @@ export default function App() {
       return;
     }
 
+    setAuthLoading(true);
     try {
       if (authMode === 'login') {
         const payload: LoginRequest = { email, password };
@@ -578,6 +582,8 @@ export default function App() {
       showToast('회원가입이 완료되었습니다.');
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : '인증 처리 중 오류가 발생했습니다.');
+    } finally {
+      setAuthLoading(false);
     }
   };
 
@@ -719,8 +725,8 @@ export default function App() {
               }}
             />
             {authError && <p className="auth-error">{authError}</p>}
-            <button onClick={() => void handleAuth()}>
-              {authMode === 'login' ? '로그인' : '회원가입'}
+            <button onClick={() => void handleAuth()} disabled={authLoading}>
+              {authLoading ? '처리 중...' : authMode === 'login' ? '로그인' : '회원가입'}
             </button>
           </div>
 
