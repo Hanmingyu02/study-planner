@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { apiRequest } from './lib/api';
+import { API_BASE_URL, apiRequest } from './lib/api';
 import type {
   AuthResponse,
   CalendarDayResponse,
@@ -175,6 +175,7 @@ export default function App() {
   const [authPassword, setAuthPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [backendReady, setBackendReady] = useState(false);
 
   const [token, setToken] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -286,6 +287,34 @@ export default function App() {
 
     void run();
   }, []);
+
+  useEffect(() => {
+    if (currentUser) return;
+
+    let cancelled = false;
+    const checkHealth = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/health`);
+        if (!cancelled) {
+          setBackendReady(response.ok);
+        }
+      } catch {
+        if (!cancelled) {
+          setBackendReady(false);
+        }
+      }
+    };
+
+    void checkHealth();
+    const timer = window.setInterval(() => {
+      void checkHealth();
+    }, 7000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [currentUser]);
 
   useEffect(() => {
     if (!token || !currentUser) return;
@@ -537,7 +566,7 @@ export default function App() {
   });
 
   const handleAuth = async () => {
-    if (authLoading) return;
+    if (authLoading || !backendReady) return;
 
     const email = authEmail.trim().toLowerCase();
     const password = authPassword.trim();
@@ -725,8 +754,9 @@ export default function App() {
               }}
             />
             {authError && <p className="auth-error">{authError}</p>}
-            <button onClick={() => void handleAuth()} disabled={authLoading}>
-              {authLoading ? '처리 중...' : authMode === 'login' ? '로그인' : '회원가입'}
+            {!backendReady && <p className="auth-error">서버 준비 중입니다. 잠시만 기다려주세요.</p>}
+            <button onClick={() => void handleAuth()} disabled={authLoading || !backendReady}>
+              {!backendReady ? '서버 준비 중...' : authLoading ? '처리 중...' : authMode === 'login' ? '로그인' : '회원가입'}
             </button>
           </div>
 
