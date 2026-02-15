@@ -653,7 +653,7 @@ export default function App() {
 
       setTitle('');
       await fetchTasksForDate(dueDate);
-      await fetchCalendarMonth();
+      void fetchCalendarMonth();
     } catch (error) {
       showToast(error instanceof Error ? error.message : '일정 추가에 실패했습니다.');
     }
@@ -667,7 +667,7 @@ export default function App() {
         body: JSON.stringify({ date: dueDate } satisfies ToggleTaskRequest),
       });
       await fetchTasksForDate(dueDate);
-      await fetchCalendarMonth();
+      void fetchCalendarMonth();
     } catch (error) {
       showToast(error instanceof Error ? error.message : '일정 상태 변경에 실패했습니다.');
     }
@@ -680,7 +680,7 @@ export default function App() {
         method: 'DELETE',
       });
       await fetchTasksForDate(dueDate);
-      await fetchCalendarMonth();
+      void fetchCalendarMonth();
     } catch (error) {
       showToast(error instanceof Error ? error.message : '일정 삭제에 실패했습니다.');
     }
@@ -694,7 +694,7 @@ export default function App() {
         body: JSON.stringify({ dueDate: dateKey } satisfies MoveTaskRequest),
       });
       await fetchTasksForDate(dueDate);
-      await fetchCalendarMonth();
+      void fetchCalendarMonth();
     } catch (error) {
       showToast(error instanceof Error ? error.message : '일정 이동에 실패했습니다.');
     }
