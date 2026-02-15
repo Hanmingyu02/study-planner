@@ -827,7 +827,10 @@ export default function App() {
       <div className="content-grid">
         <section className="panel planner">
           <div className="section-heading">
-            <h2>선택 날짜 플랜</h2>
+            <div>
+              <h2>선택 날짜 플랜</h2>
+              <p className="planner-date">{dueDate}</p>
+            </div>
             <span>남은 일정 {pendingSelectedTasks.length}개</span>
           </div>
 
@@ -905,11 +908,15 @@ export default function App() {
               >
                 <label className="task-main">
                   <input type="checkbox" checked={task.completed} onChange={() => void toggleTask(task.id)} />
-                  <span>{task.title}</span>
-                  <small>{task.subject}</small>
-                  <small className={`priority-tag ${task.priority}`}>{priorityLabel(task.priority)}</small>
-                  <small className="time-tag">{task.dueTime}</small>
-                  <small className="recurrence-tag">{recurrenceLabel(task.recurrence)}</small>
+                  <div className="task-copy">
+                    <span className="task-title">{task.title}</span>
+                    <p className="task-subject">{task.subject}</p>
+                    <div className="task-meta-row">
+                      <small className="time-tag">{task.dueTime}</small>
+                      <small className={`priority-tag ${task.priority}`}>{priorityLabel(task.priority)}</small>
+                      <small className="recurrence-tag">{recurrenceLabel(task.recurrence)}</small>
+                    </div>
+                  </div>
                 </label>
                 <button className="danger" onClick={() => void deleteTask(task.id)}>
                   삭제
@@ -932,11 +939,15 @@ export default function App() {
               >
                 <label className="task-main">
                   <input type="checkbox" checked={task.completed} onChange={() => void toggleTask(task.id)} />
-                  <span className="done">{task.title}</span>
-                  <small>{task.subject}</small>
-                  <small className={`priority-tag ${task.priority}`}>{priorityLabel(task.priority)}</small>
-                  <small className="time-tag">{task.dueTime}</small>
-                  <small className="recurrence-tag">{recurrenceLabel(task.recurrence)}</small>
+                  <div className="task-copy">
+                    <span className="task-title done">{task.title}</span>
+                    <p className="task-subject">{task.subject}</p>
+                    <div className="task-meta-row">
+                      <small className="time-tag">{task.dueTime}</small>
+                      <small className={`priority-tag ${task.priority}`}>{priorityLabel(task.priority)}</small>
+                      <small className="recurrence-tag">{recurrenceLabel(task.recurrence)}</small>
+                    </div>
+                  </div>
                 </label>
                 <button className="danger" onClick={() => void deleteTask(task.id)}>
                   삭제
