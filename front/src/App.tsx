@@ -831,63 +831,69 @@ export default function App() {
               <h2>선택 날짜 플랜</h2>
               <p className="planner-date">{dueDate}</p>
             </div>
-            <span>남은 일정 {pendingSelectedTasks.length}개</span>
+            <span className="planner-count">남은 일정 {pendingSelectedTasks.length}개</span>
           </div>
 
-          <div className="task-form">
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="무엇을 공부할까요?"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') void addTask();
-              }}
-            />
-            <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="과목" />
-            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-            <input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} />
-            <select value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
-              <option value="high">우선순위 높음</option>
-              <option value="medium">우선순위 중간</option>
-              <option value="low">우선순위 낮음</option>
-            </select>
-            <select value={recurrence} onChange={(e) => setRecurrence(e.target.value as Recurrence)}>
-              <option value="none">일회성</option>
-              <option value="daily">매일 반복</option>
-              <option value="weekly">매주 반복</option>
-            </select>
-            <button className="add-btn" onClick={() => void addTask()}>
-              추가
-            </button>
+          <div className="planner-toolbar">
+            <div className="quick-date-row">
+              <button className={`quick-date-btn ${dueDate === todayKey ? 'active' : ''}`} onClick={() => setDueDate(todayKey)}>
+                오늘
+              </button>
+              <button className={`quick-date-btn ${dueDate === tomorrowKey ? 'active' : ''}`} onClick={() => setDueDate(tomorrowKey)}>
+                내일
+              </button>
+            </div>
+
+            <div className="planner-filters-inline">
+              <label>
+                우선순위
+                <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value as 'all' | Priority)}>
+                  <option value="all">전체</option>
+                  <option value="high">높음</option>
+                  <option value="medium">중간</option>
+                  <option value="low">낮음</option>
+                </select>
+              </label>
+              <label>
+                정렬
+                <select value={sortMode} onChange={(e) => setSortMode(e.target.value as SortMode)}>
+                  <option value="priority">우선순위순</option>
+                  <option value="time">시간순</option>
+                  <option value="recent">최신순</option>
+                </select>
+              </label>
+            </div>
           </div>
 
-          <div className="quick-date-row">
-            <button className={`quick-date-btn ${dueDate === todayKey ? 'active' : ''}`} onClick={() => setDueDate(todayKey)}>
-              오늘
-            </button>
-            <button className={`quick-date-btn ${dueDate === tomorrowKey ? 'active' : ''}`} onClick={() => setDueDate(tomorrowKey)}>
-              내일
-            </button>
-          </div>
-
-          <div className="planner-filters">
-            <label>
-              우선순위
-              <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value as 'all' | Priority)}>
-                <option value="all">전체</option>
-                <option value="high">높음</option>
-                <option value="medium">중간</option>
-                <option value="low">낮음</option>
+          <div className="task-composer">
+            <div className="task-title-row">
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="할 일 제목을 입력하세요"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void addTask();
+                }}
+              />
+              <button className="add-btn" onClick={() => void addTask()}>
+                일정 추가
+              </button>
+            </div>
+            <div className="task-meta-grid">
+              <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="과목" />
+              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+              <input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} />
+              <select value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
+                <option value="high">우선순위 높음</option>
+                <option value="medium">우선순위 중간</option>
+                <option value="low">우선순위 낮음</option>
               </select>
-            </label>
-            <label>
-              정렬
-              <select value={sortMode} onChange={(e) => setSortMode(e.target.value as SortMode)}>
-                <option value="priority">우선순위순</option>
-                <option value="time">시간순</option>
-                <option value="recent">최신순</option>
+              <select value={recurrence} onChange={(e) => setRecurrence(e.target.value as Recurrence)}>
+                <option value="none">일회성</option>
+                <option value="daily">매일 반복</option>
+                <option value="weekly">매주 반복</option>
               </select>
-            </label>
+            </div>
           </div>
 
           <ul className="task-list">

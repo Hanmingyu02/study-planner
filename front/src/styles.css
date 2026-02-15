@@ -251,19 +251,26 @@ h1 {
   color: #2d6055;
 }
 
-.task-form {
-  margin-top: 12px;
-  display: grid;
-  gap: 8px;
-  grid-template-columns: 1.3fr 0.9fr 140px 120px 130px 120px auto;
+.planner-count {
+  align-self: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #2f5d51;
+  border: 1px solid #cfe0d9;
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: #f3faf7;
 }
 
-.add-btn {
-  white-space: nowrap;
+.planner-toolbar {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
 }
 
 .quick-date-row {
-  margin-top: 8px;
   display: flex;
   gap: 8px;
 }
@@ -282,6 +289,46 @@ h1 {
   color: #f0fdfa;
   background: linear-gradient(135deg, var(--brand), #0d9488);
   border-color: transparent;
+}
+
+.planner-filters-inline {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(140px, 180px));
+  gap: 8px;
+}
+
+.planner-filters-inline label {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #48655b;
+}
+
+.task-composer {
+  margin-top: 10px;
+  border: 1px solid #d8e5df;
+  border-radius: 12px;
+  background: #f9fcfb;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.task-title-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.add-btn {
+  white-space: nowrap;
+}
+
+.task-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 160px 140px 170px 130px;
+  gap: 8px;
 }
 
 input,
@@ -715,12 +762,21 @@ button:hover {
 }
 
 @media (max-width: 840px) {
-  .task-form {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .planner-toolbar {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .task-form .add-btn {
-    grid-column: span 3;
+  .planner-filters-inline {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .task-title-row {
+    grid-template-columns: 1fr;
+  }
+
+  .task-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .day-cell {
@@ -755,16 +811,16 @@ button:hover {
     grid-template-columns: 1fr;
   }
 
-  .task-form {
+  .planner-filters-inline {
     grid-template-columns: 1fr;
   }
 
-  .task-form .add-btn {
-    grid-column: auto;
+  .task-meta-grid {
+    grid-template-columns: 1fr;
   }
 
-  .planner-filters {
-    grid-template-columns: 1fr;
+  .planner-count {
+    align-self: flex-start;
   }
 
   .task-item {
