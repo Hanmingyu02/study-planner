@@ -1,41 +1,57 @@
-# Study Planner Backend (Spring Boot + MySQL)
+# Study Planner Backend (Spring Boot + MySQL Compatible DB)
 
 ## Stack
 - Spring Boot 3.3
 - Spring Security + JWT
 - Spring Data JPA
-- MySQL 8
+- Spring Mail
+- MySQL compatible DB (MySQL / TiDB)
 
-## Run MySQL
+## Run Local DB
 ```bash
 cd ../db
 docker compose up -d
 ```
 
 ## Run Backend
-This project uses Gradle.
-
 ```bash
 cd backend
 ./gradlew bootRun
 ```
 
-If `gradlew` is not available, install Gradle locally and run:
-```bash
-gradle bootRun
-```
-
 ## Env vars
-Copy `.env.example` values into your shell or `.env` loader.
+Copy `backend/.env.example` values into your shell or deployment platform.
 
+필수:
 - `DB_HOST`
 - `DB_PORT`
 - `DB_NAME`
 - `DB_USERNAME`
 - `DB_PASSWORD`
-- `SERVER_PORT`
 - `JWT_SECRET`
+
+선택:
+- `DB_PARAMS` (기본: `serverTimezone=UTC&characterEncoding=UTF-8`)
+- `SERVER_PORT`
 - `JWT_EXPIRATION_MS`
+
+메일 인증 사용 시:
+- `MAIL_HOST`
+- `MAIL_PORT`
+- `MAIL_USERNAME`
+- `MAIL_PASSWORD`
+- `MAIL_FROM`
+- `MAIL_SMTP_AUTH`
+- `MAIL_SMTP_STARTTLS_ENABLE`
+- `MAIL_VERIFICATION_EXP_MINUTES`
+
+## TiDB Serverless 권장 DB_PARAMS
+```text
+sslMode=VERIFY_IDENTITY&enabledTLSProtocols=TLSv1.2,TLSv1.3&serverTimezone=UTC&characterEncoding=UTF-8
+```
+
+## Health Check
+- `GET /api/health`
 
 ## Main APIs
 Base URL: `http://localhost:8080`

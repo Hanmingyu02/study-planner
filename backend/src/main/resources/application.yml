@@ -2,7 +2,7 @@ spring:
   application:
     name: study-planner-backend
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:study_planner}?serverTimezone=UTC&characterEncoding=UTF-8
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:study_planner}?${DB_PARAMS:serverTimezone=UTC&characterEncoding=UTF-8}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:root}
   jpa:
