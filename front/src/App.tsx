@@ -183,9 +183,7 @@ export default function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [calendarTasksByDate, setCalendarTasksByDate] = useState<Record<string, Task[]>>({});
   const [title, setTitle] = useState('');
-  const [subject, setSubject] = useState('일반');
   const [dueDate, setDueDate] = useState(toDateKey(new Date()));
-  const [dueTime, setDueTime] = useState('09:00');
   const [priority, setPriority] = useState<Priority>('medium');
   const [recurrence, setRecurrence] = useState<Recurrence>('none');
 
@@ -636,9 +634,9 @@ export default function App() {
         method: 'POST',
         body: JSON.stringify({
           title: trimmedTitle,
-          subject: subject.trim() || '일반',
+          subject: '일반',
           dueDate,
-          dueTime,
+          dueTime: '09:00',
           priority: toApiPriority(priority),
           recurrence: toApiRecurrence(recurrence),
         } satisfies CreateTaskRequest),
@@ -880,9 +878,7 @@ export default function App() {
               </button>
             </div>
             <div className="task-meta-grid">
-              <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="과목" />
               <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-              <input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} />
               <select value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
                 <option value="high">우선순위 높음</option>
                 <option value="medium">우선순위 중간</option>
@@ -916,7 +912,6 @@ export default function App() {
                   <input type="checkbox" checked={task.completed} onChange={() => void toggleTask(task.id)} />
                   <div className="task-copy">
                     <span className="task-title">{task.title}</span>
-                    <p className="task-subject">{task.subject}</p>
                     <div className="task-meta-row">
                       <small className="time-tag">{task.dueTime}</small>
                       <small className={`priority-tag ${task.priority}`}>{priorityLabel(task.priority)}</small>
@@ -947,7 +942,6 @@ export default function App() {
                   <input type="checkbox" checked={task.completed} onChange={() => void toggleTask(task.id)} />
                   <div className="task-copy">
                     <span className="task-title done">{task.title}</span>
-                    <p className="task-subject">{task.subject}</p>
                     <div className="task-meta-row">
                       <small className="time-tag">{task.dueTime}</small>
                       <small className={`priority-tag ${task.priority}`}>{priorityLabel(task.priority)}</small>
