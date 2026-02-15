@@ -43,6 +43,21 @@ public class AuthService {
         this.verificationExpirationMinutes = verificationExpirationMinutes;
     }
 
+    public AuthDtos.AuthResponse register(AuthDtos.RegisterRequest request) {
+        final String normalizedEmail = request.email().trim().toLowerCase();
+        if (userRepository.existsByEmail(normalizedEmail)) {
+            throw new BadRequestException("이미 가입된 이메일입니다.");
+        }
+
+        User user = new User();
+        user.setName(request.name().trim());
+        user.setEmail(normalizedEmail);
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user = userRepository.save(user);
+
+        return buildAuthResponse(user);
+    }
+
     public AuthDtos.MessageResponse requestVerificationCode(AuthDtos.RequestVerificationCodeRequest request) {
         final String normalizedEmail = request.email().trim().toLowerCase();
         if (userRepository.existsByEmail(normalizedEmail)) {

@@ -7,15 +7,13 @@ import type {
   FocusLogRequest,
   FocusLogResponse,
   LoginRequest,
-  MessageResponse,
   MoveTaskRequest,
-  RequestVerificationCodeRequest,
+  RegisterRequest,
   SettingsResponse,
   TaskResponse,
   ToggleTaskRequest,
   UpdateSettingsRequest,
   UserResponse,
-  VerifyRegistrationRequest,
 } from './types/api';
 
 type Priority = 'high' | 'medium' | 'low';
@@ -175,8 +173,6 @@ export default function App() {
   const [authName, setAuthName] = useState('');
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
-  const [authCode, setAuthCode] = useState('');
-  const [isCodeSent, setIsCodeSent] = useState(false);
   const [authError, setAuthError] = useState('');
 
   const [token, setToken] = useState<string | null>(null);
@@ -564,34 +560,12 @@ export default function App() {
         return;
       }
 
-      if (!isCodeSent) {
-        const payload: RequestVerificationCodeRequest = {
-          name: authName.trim() || '스터디러',
-          email,
-          password,
-        };
-
-        const result = await apiRequest<MessageResponse>('/api/auth/register/request-code', null, {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        });
-
-        setIsCodeSent(true);
-        setAuthError('');
-        showToast(result.message);
-        return;
-      }
-
-      if (!/^\\d{6}$/.test(authCode.trim())) {
-        setAuthError('인증번호 6자리를 입력해주세요.');
-        return;
-      }
-
-      const payload: VerifyRegistrationRequest = {
+      const payload: RegisterRequest = {
+        name: authName.trim() || '스터디러',
         email,
-        code: authCode.trim(),
+        password,
       };
-      const response = await apiRequest<AuthResponse>('/api/auth/register/verify-code', null, {
+      const response = await apiRequest<AuthResponse>('/api/auth/register', null, {
         method: 'POST',
         body: JSON.stringify(payload),
       });
@@ -601,6 +575,7 @@ export default function App() {
       setCurrentUser({ id: response.user.id, name: response.user.name, email: response.user.email });
       setAuthError('');
       setAlertedReminders({});
+      showToast('회원가입이 완료되었습니다.');
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : '인증 처리 중 오류가 발생했습니다.');
     }
@@ -743,20 +718,9 @@ export default function App() {
                 if (e.key === 'Enter') void handleAuth();
               }}
             />
-            {authMode === 'register' && isCodeSent && (
-              <input
-                value={authCode}
-                onChange={(e) => setAuthCode(e.target.value)}
-                placeholder="이메일 인증번호 6자리"
-                inputMode="numeric"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') void handleAuth();
-                }}
-              />
-            )}
             {authError && <p className="auth-error">{authError}</p>}
             <button onClick={() => void handleAuth()}>
-              {authMode === 'login' ? '로그인' : isCodeSent ? '인증하고 가입 완료' : '인증번호 받기'}
+              {authMode === 'login' ? '로그인' : '회원가입'}
             </button>
           </div>
 
@@ -765,8 +729,6 @@ export default function App() {
             onClick={() => {
               setAuthMode((prev) => (prev === 'login' ? 'register' : 'login'));
               setAuthError('');
-              setIsCodeSent(false);
-              setAuthCode('');
             }}
           >
             {authMode === 'login' ? '처음이신가요? 회원가입' : '이미 계정이 있나요? 로그인'}

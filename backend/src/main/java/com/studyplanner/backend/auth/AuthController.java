@@ -15,6 +15,11 @@ public class AuthController {
         this.authService = authService;
     }
 
+    @PostMapping("/register")
+    public AuthDtos.AuthResponse register(@RequestBody @Valid AuthDtos.RegisterRequest request) {
+        return authService.register(request);
+    }
+
     @PostMapping("/register/request-code")
     public AuthDtos.MessageResponse requestCode(@RequestBody @Valid AuthDtos.RequestVerificationCodeRequest request) {
         return authService.requestVerificationCode(request);
