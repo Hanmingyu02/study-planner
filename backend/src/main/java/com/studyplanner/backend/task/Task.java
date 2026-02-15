@@ -9,7 +9,13 @@ import java.time.LocalTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tasks")
+@Table(
+        name = "tasks",
+        indexes = {
+                @Index(name = "idx_tasks_user_due_date", columnList = "user_id,due_date"),
+                @Index(name = "idx_tasks_user_due_priority", columnList = "user_id,due_date,priority")
+        }
+)
 public class Task {
 
     @Id

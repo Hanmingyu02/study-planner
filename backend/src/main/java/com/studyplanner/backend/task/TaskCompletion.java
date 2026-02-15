@@ -6,9 +6,15 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
-@Table(name = "task_completions", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_completion_task_date", columnNames = {"task_id", "occurrence_date"})
-})
+@Table(
+        name = "task_completions",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_completion_task_date", columnNames = {"task_id", "occurrence_date"})
+        },
+        indexes = {
+                @Index(name = "idx_completion_task_date", columnList = "task_id,occurrence_date")
+        }
+)
 public class TaskCompletion {
 
     @Id
