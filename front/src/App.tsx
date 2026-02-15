@@ -212,6 +212,8 @@ export default function App() {
   const [viewDate, setViewDate] = useState(() => new Date());
   const toastTimeoutRef = useRef<number | null>(null);
   const isHydratingSettingsRef = useRef(false);
+  const reminderInFlightRef = useRef(false);
+  const alertedRemindersRef = useRef<Record<string, boolean>>({});
 
   const todayKey = useMemo(() => toDateKey(new Date()), []);
   const tomorrowKey = useMemo(() => {
@@ -453,6 +455,8 @@ export default function App() {
     if (!reminder10Enabled && !reminder30Enabled) return;
 
     const check = async () => {
+      if (reminderInFlightRef.current) return;
+      reminderInFlightRef.current = true;
       try {
         const [todayTasksRaw, tomorrowTasksRaw] = await Promise.all([
           apiRequest<TaskResponse[]>(`/api/tasks?date=${todayKey}&sort=time`, token),
@@ -477,7 +481,7 @@ export default function App() {
 
           minutesList.forEach((minutesBefore) => {
             const key = `${task.id}::${dateKey}::${minutesBefore}`;
-            if (alertedReminders[key]) return;
+            if (alertedRemindersRef.current[key]) return;
 
             const alertAt = dueAt - minutesBefore * 60_000;
             if (now >= alertAt && now < dueAt) {
@@ -498,6 +502,8 @@ export default function App() {
         }
       } catch {
         // ignore reminder polling failure
+      } finally {
+        reminderInFlightRef.current = false;
       }
     };
 
@@ -511,7 +517,6 @@ export default function App() {
     tomorrowKey,
     reminder10Enabled,
     reminder30Enabled,
-    alertedReminders,
     soundEnabled,
     browserNotifyEnabled,
   ]);
@@ -521,6 +526,10 @@ export default function App() {
       if (toastTimeoutRef.current) window.clearTimeout(toastTimeoutRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    alertedRemindersRef.current = alertedReminders;
+  }, [alertedReminders]);
 
   const selectedDateTasks = useMemo(() => tasks, [tasks]);
 
@@ -643,7 +652,8 @@ export default function App() {
       });
 
       setTitle('');
-      await Promise.all([fetchTasksForDate(dueDate), fetchCalendarMonth()]);
+      await fetchTasksForDate(dueDate);
+      await fetchCalendarMonth();
     } catch (error) {
       showToast(error instanceof Error ? error.message : '일정 추가에 실패했습니다.');
     }
@@ -656,7 +666,8 @@ export default function App() {
         method: 'PATCH',
         body: JSON.stringify({ date: dueDate } satisfies ToggleTaskRequest),
       });
-      await Promise.all([fetchTasksForDate(dueDate), fetchCalendarMonth()]);
+      await fetchTasksForDate(dueDate);
+      await fetchCalendarMonth();
     } catch (error) {
       showToast(error instanceof Error ? error.message : '일정 상태 변경에 실패했습니다.');
     }
@@ -668,7 +679,8 @@ export default function App() {
       await apiRequest<{ message: string }>(`/api/tasks/${taskId}`, token, {
         method: 'DELETE',
       });
-      await Promise.all([fetchTasksForDate(dueDate), fetchCalendarMonth()]);
+      await fetchTasksForDate(dueDate);
+      await fetchCalendarMonth();
     } catch (error) {
       showToast(error instanceof Error ? error.message : '일정 삭제에 실패했습니다.');
     }
@@ -681,7 +693,8 @@ export default function App() {
         method: 'PATCH',
         body: JSON.stringify({ dueDate: dateKey } satisfies MoveTaskRequest),
       });
-      await Promise.all([fetchTasksForDate(dueDate), fetchCalendarMonth()]);
+      await fetchTasksForDate(dueDate);
+      await fetchCalendarMonth();
     } catch (error) {
       showToast(error instanceof Error ? error.message : '일정 이동에 실패했습니다.');
     }

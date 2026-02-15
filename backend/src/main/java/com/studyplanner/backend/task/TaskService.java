@@ -58,15 +58,25 @@ public class TaskService {
         LocalDate last = month.atEndOfMonth();
 
         List<Task> all = taskRepository.findByUserAndDueDateLessThanEqual(user, last);
+        List<TaskCompletion> monthCompletions = all.isEmpty()
+                ? List.of()
+                : taskCompletionRepository.findByTaskInAndOccurrenceDateBetween(all, first, last);
+        Set<String> completionKeys = new HashSet<>();
+        for (TaskCompletion completion : monthCompletions) {
+            completionKeys.add(completionKey(completion.getTask().getId(), completion.getOccurrenceDate()));
+        }
         List<TaskDtos.CalendarDayResponse> result = new ArrayList<>();
 
         for (LocalDate day = first; !day.isAfter(last); day = day.plusDays(1)) {
             LocalDate current = day;
             List<Task> dayTasks = all.stream().filter(task -> occursOn(task, current)).toList();
-            Map<UUID, Boolean> completionMap = completionMap(dayTasks, day);
-
             List<TaskDtos.TaskResponse> mapped = dayTasks.stream()
-                    .map(task -> toResponse(task, current, completionMap.getOrDefault(task.getId(), false)))
+                    .map(task -> {
+                        boolean completed = task.getRecurrence() == Recurrence.NONE
+                                ? task.isCompleted()
+                                : completionKeys.contains(completionKey(task.getId(), current));
+                        return toResponse(task, current, completed);
+                    })
                     .sorted(taskComparator("time"))
                     .toList();
 
@@ -164,6 +174,10 @@ public class TaskService {
         }
 
         return map;
+    }
+
+    private String completionKey(UUID taskId, LocalDate date) {
+        return taskId + "::" + date;
     }
 
     private Comparator<TaskDtos.TaskResponse> taskComparator(String sort) {

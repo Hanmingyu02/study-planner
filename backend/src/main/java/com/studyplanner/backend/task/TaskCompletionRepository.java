@@ -10,5 +10,6 @@ import java.util.UUID;
 public interface TaskCompletionRepository extends JpaRepository<TaskCompletion, UUID> {
     Optional<TaskCompletion> findByTaskAndOccurrenceDate(Task task, LocalDate occurrenceDate);
     List<TaskCompletion> findByTaskInAndOccurrenceDate(List<Task> tasks, LocalDate occurrenceDate);
+    List<TaskCompletion> findByTaskInAndOccurrenceDateBetween(List<Task> tasks, LocalDate from, LocalDate to);
     void deleteByTask(Task task);
 }
