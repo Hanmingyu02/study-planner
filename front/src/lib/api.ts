@@ -1,5 +1,5 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
-const REQUEST_TIMEOUT_MS = 15000;
+const REQUEST_TIMEOUT_MS = 30000;
 const GET_RETRY_COUNT = 1;
 
 function wait(ms: number): Promise<void> {
