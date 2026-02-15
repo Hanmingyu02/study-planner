@@ -455,23 +455,18 @@ export default function App() {
     if (!reminder10Enabled && !reminder30Enabled) return;
 
     const check = async () => {
+      if (document.visibilityState !== 'visible') return;
       if (reminderInFlightRef.current) return;
       reminderInFlightRef.current = true;
       try {
-        const [todayTasksRaw, tomorrowTasksRaw] = await Promise.all([
-          apiRequest<TaskResponse[]>(`/api/tasks?date=${todayKey}&sort=time`, token),
-          apiRequest<TaskResponse[]>(`/api/tasks?date=${tomorrowKey}&sort=time`, token),
-        ]);
+        const todayTasksRaw = await apiRequest<TaskResponse[]>(`/api/tasks?date=${todayKey}&sort=time`, token);
 
         const now = Date.now();
         const minutesList: number[] = [];
         if (reminder30Enabled) minutesList.push(30);
         if (reminder10Enabled) minutesList.push(10);
 
-        const allTasks = [
-          ...todayTasksRaw.map((item) => ({ task: fromApiTask(item), dateKey: todayKey })),
-          ...tomorrowTasksRaw.map((item) => ({ task: fromApiTask(item), dateKey: tomorrowKey })),
-        ];
+        const allTasks = todayTasksRaw.map((item) => ({ task: fromApiTask(item), dateKey: todayKey }));
 
         const newlyAlerted: string[] = [];
 
@@ -508,13 +503,12 @@ export default function App() {
     };
 
     void check();
-    const intervalId = window.setInterval(() => void check(), 30_000);
+    const intervalId = window.setInterval(() => void check(), 60_000);
     return () => window.clearInterval(intervalId);
   }, [
     token,
     currentUser,
     todayKey,
-    tomorrowKey,
     reminder10Enabled,
     reminder30Enabled,
     soundEnabled,
@@ -653,7 +647,6 @@ export default function App() {
 
       setTitle('');
       await fetchTasksForDate(dueDate);
-      void fetchCalendarMonth();
     } catch (error) {
       showToast(error instanceof Error ? error.message : '일정 추가에 실패했습니다.');
     }
@@ -667,7 +660,6 @@ export default function App() {
         body: JSON.stringify({ date: dueDate } satisfies ToggleTaskRequest),
       });
       await fetchTasksForDate(dueDate);
-      void fetchCalendarMonth();
     } catch (error) {
       showToast(error instanceof Error ? error.message : '일정 상태 변경에 실패했습니다.');
     }
@@ -680,7 +672,6 @@ export default function App() {
         method: 'DELETE',
       });
       await fetchTasksForDate(dueDate);
-      void fetchCalendarMonth();
     } catch (error) {
       showToast(error instanceof Error ? error.message : '일정 삭제에 실패했습니다.');
     }
@@ -694,7 +685,6 @@ export default function App() {
         body: JSON.stringify({ dueDate: dateKey } satisfies MoveTaskRequest),
       });
       await fetchTasksForDate(dueDate);
-      void fetchCalendarMonth();
     } catch (error) {
       showToast(error instanceof Error ? error.message : '일정 이동에 실패했습니다.');
     }

@@ -2,13 +2,14 @@ package com.studyplanner.backend.task;
 
 import com.studyplanner.backend.common.NotFoundException;
 import com.studyplanner.backend.user.User;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class TaskService {
@@ -36,8 +37,9 @@ public class TaskService {
         return toResponse(taskRepository.save(task), request.dueDate());
     }
 
+    @Transactional(readOnly = true)
     public List<TaskDtos.TaskResponse> getByDate(User user, LocalDate date, Priority priority, String sort) {
-        List<Task> candidates = taskRepository.findByUserAndDueDateLessThanEqual(user, date);
+        List<Task> candidates = taskRepository.findByUserForDate(user, date);
         List<Task> filtered = candidates.stream()
                 .filter(task -> occursOn(task, date))
                 .filter(task -> priority == null || task.getPriority() == priority)
@@ -53,24 +55,27 @@ public class TaskService {
         return result;
     }
 
+    @Transactional(readOnly = true)
     public List<TaskDtos.CalendarDayResponse> getMonth(User user, YearMonth month) {
         LocalDate first = month.atDay(1);
         LocalDate last = month.atEndOfMonth();
 
-        List<Task> all = taskRepository.findByUserAndDueDateLessThanEqual(user, last);
-        List<TaskCompletion> monthCompletions = all.isEmpty()
-                ? List.of()
-                : taskCompletionRepository.findByTaskInAndOccurrenceDateBetween(all, first, last);
-        Set<String> completionKeys = new HashSet<>();
-        for (TaskCompletion completion : monthCompletions) {
-            completionKeys.add(completionKey(completion.getTask().getId(), completion.getOccurrenceDate()));
-        }
+        List<Task> monthCandidates = taskRepository.findByUserForMonth(user, first, last);
+        Map<LocalDate, List<Task>> tasksByDay = buildTasksByDay(monthCandidates, first, last);
+
+        List<Task> recurringTasks = monthCandidates.stream()
+                .filter(task -> task.getRecurrence() != Recurrence.NONE)
+                .toList();
+        Set<String> completionKeys = recurringTasks.isEmpty()
+                ? Collections.emptySet()
+                : taskCompletionRepository.findByTaskInAndOccurrenceDateBetween(recurringTasks, first, last).stream()
+                .map(completion -> completionKey(completion.getTask().getId(), completion.getOccurrenceDate()))
+                .collect(Collectors.toSet());
         List<TaskDtos.CalendarDayResponse> result = new ArrayList<>();
 
         for (LocalDate day = first; !day.isAfter(last); day = day.plusDays(1)) {
             LocalDate current = day;
-            List<Task> dayTasks = all.stream().filter(task -> occursOn(task, current)).toList();
-            List<TaskDtos.TaskResponse> mapped = dayTasks.stream()
+            List<TaskDtos.TaskResponse> mapped = tasksByDay.getOrDefault(current, Collections.emptyList()).stream()
                     .map(task -> {
                         boolean completed = task.getRecurrence() == Recurrence.NONE
                                 ? task.isCompleted()
@@ -161,8 +166,14 @@ public class TaskService {
     private Map<UUID, Boolean> completionMap(List<Task> tasks, LocalDate date) {
         if (tasks.isEmpty()) return Collections.emptyMap();
 
-        List<TaskCompletion> completions = taskCompletionRepository.findByTaskInAndOccurrenceDate(tasks, date);
-        Set<UUID> completedRecurringTaskIds = completions.stream().map(c -> c.getTask().getId()).collect(java.util.stream.Collectors.toSet());
+        List<Task> recurringTasks = tasks.stream()
+                .filter(task -> task.getRecurrence() != Recurrence.NONE)
+                .toList();
+        Set<UUID> completedRecurringTaskIds = recurringTasks.isEmpty()
+                ? Collections.emptySet()
+                : taskCompletionRepository.findByTaskInAndOccurrenceDate(recurringTasks, date).stream()
+                .map(c -> c.getTask().getId())
+                .collect(Collectors.toSet());
 
         Map<UUID, Boolean> map = new HashMap<>();
         for (Task task : tasks) {
@@ -174,6 +185,47 @@ public class TaskService {
         }
 
         return map;
+    }
+
+    private Map<LocalDate, List<Task>> buildTasksByDay(List<Task> tasks, LocalDate first, LocalDate last) {
+        Map<LocalDate, List<Task>> tasksByDay = new HashMap<>();
+
+        for (Task task : tasks) {
+            if (task.getRecurrence() == Recurrence.NONE) {
+                LocalDate dueDate = task.getDueDate();
+                if (!dueDate.isBefore(first) && !dueDate.isAfter(last)) {
+                    addTaskOnDay(tasksByDay, dueDate, task);
+                }
+                continue;
+            }
+
+            LocalDate start = task.getDueDate().isAfter(first) ? task.getDueDate() : first;
+            if (task.getRecurrence() == Recurrence.DAILY) {
+                for (LocalDate day = start; !day.isAfter(last); day = day.plusDays(1)) {
+                    addTaskOnDay(tasksByDay, day, task);
+                }
+                continue;
+            }
+
+            LocalDate firstWeekly = firstWeeklyOccurrenceOnOrAfter(task.getDueDate().getDayOfWeek(), start);
+            for (LocalDate day = firstWeekly; !day.isAfter(last); day = day.plusWeeks(1)) {
+                addTaskOnDay(tasksByDay, day, task);
+            }
+        }
+
+        return tasksByDay;
+    }
+
+    private LocalDate firstWeeklyOccurrenceOnOrAfter(DayOfWeek target, LocalDate start) {
+        int delta = target.getValue() - start.getDayOfWeek().getValue();
+        if (delta < 0) {
+            delta += 7;
+        }
+        return start.plusDays(delta);
+    }
+
+    private void addTaskOnDay(Map<LocalDate, List<Task>> tasksByDay, LocalDate day, Task task) {
+        tasksByDay.computeIfAbsent(day, ignored -> new ArrayList<>()).add(task);
     }
 
     private String completionKey(UUID taskId, LocalDate date) {
